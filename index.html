@@ -701,6 +701,17 @@
     color: var(--plum-soft);
     line-height: 1.45;
   }
+  .rubric-factor-note {
+    display: inline-block;
+    font-size: 10.5px;
+    color: var(--plum-soft);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin-top: 6px;
+    background: var(--lavender);
+    padding: 3px 8px;
+    border-radius: 999px;
+  }
   .rubric-auto-note {
     display: inline-block;
     font-size: 10.5px;
@@ -951,7 +962,7 @@
   <!-- Class basics -->
   <div class="card">
     <h2>Class basics</h2>
-    <p class="hint">These four numbers do the heavy lifting. You can update them any time.</p>
+    <p class="hint">These three numbers do the heavy lifting. You can update them any time.</p>
     <div class="basics-grid">
       <div class="field">
         <label for="targetPay">Your target pay</label>
@@ -1015,7 +1026,7 @@
           <div class="tier-score-num" id="tierScoreNum">0</div>
           <span class="tier-score-label">Total score</span>
         </div>
-        <div class="tier-score-max">/ 15</div>
+        <div class="tier-score-max" id="tierScoreMax">/ 17.5</div>
       </div>
       <div class="tier-badge">
         <div class="tier-badge-lbl">Recommended range</div>
@@ -1140,6 +1151,7 @@
       technique: 1,
       prep: 1,
       intensity: 1,
+      length: 1,
       training: 1
     }
   };
@@ -1153,6 +1165,7 @@
     {
       key: 'technique',
       label: 'Technique complexity',
+      weight: 1,
       levels: [
         'Follow-along, no prior skill needed.',
         'Some skill or focus required.',
@@ -1162,6 +1175,7 @@
     {
       key: 'prep',
       label: 'Teacher prep per student',
+      weight: 1,
       levels: [
         'Minimal. Under 15 minutes total.',
         'Moderate. 15 to 45 minutes.',
@@ -1171,6 +1185,7 @@
     {
       key: 'intensity',
       label: 'Instruction intensity',
+      weight: 1,
       levels: [
         'Students mostly self-directed.',
         'Some individual guidance needed.',
@@ -1178,8 +1193,22 @@
       ]
     },
     {
+      key: 'length',
+      label: 'Total length of class',
+      weight: 1,
+      note: 'Add up every session. 6 classes at 2 hours each is 12 hours total.',
+      levels: [
+        '1 to 3 hours total.',
+        '4 to 6 hours total.',
+        '7 to 9 hours total.',
+        '10 or more hours total.'
+      ]
+    },
+    {
       key: 'training',
       label: 'Years of training to teach it',
+      weight: 0.5,
+      note: 'Counts half. Experience alone should not raise the price.',
       levels: [
         'Anyone with basic craft knowledge.',
         '1 to 3 years of practice.',
@@ -1223,6 +1252,7 @@
   const useTierMidBtn = $('useTierMidBtn');
   const rubricEl = $('rubric');
   const tierScoreNumEl = $('tierScoreNum');
+  const tierScoreMaxEl = $('tierScoreMax');
   const tierBadgeNameEl = $('tierBadgeName');
   const tierBadgeRangeEl = $('tierBadgeRange');
   const tierStatusIconEl = $('tierStatusIcon');
@@ -1327,21 +1357,26 @@
   }
 
   function tierScore() {
-    return (
-      state.rubric.technique +
-      state.rubric.prep +
-      state.rubric.intensity +
-      state.rubric.training +
-      materialsFactorScore()
-    );
+    let s = materialsFactorScore();
+    FACTORS.forEach(f => { s += state.rubric[f.key] * f.weight; });
+    return s;
   }
 
+  function maxTierScore() {
+    let s = 3; // materials factor
+    FACTORS.forEach(f => { s += f.levels.length * f.weight; });
+    return s;
+  }
+
+  // Score runs 5.5 (everything minimal) to 17.5 (everything maxed)
   function tierFor(score) {
-    if (score >= 12) return TIERS[3];
-    if (score >= 8)  return TIERS[2];
-    if (score >= 6)  return TIERS[1];
+    if (score >= 14)   return TIERS[3];
+    if (score >= 10.5) return TIERS[2];
+    if (score >= 7)    return TIERS[1];
     return TIERS[0];
   }
+
+  const fmtScore = n => (n % 1 ? n.toFixed(1) : String(n));
 
   function tierLabel(tier) {
     return tier.level ? `Tier ${tier.level} · ${tier.name}` : tier.name;
@@ -1358,16 +1393,17 @@
       const row = document.createElement('div');
       row.className = 'rubric-row';
       const active = state.rubric[f.key];
+      const pills = f.levels.map((_, idx) => {
+        const v = idx + 1;
+        return `<button class="rubric-pill${active === v ? ' active' : ''}" data-factor="${f.key}" data-value="${v}">${v}</button>`;
+      }).join('');
       row.innerHTML = `
         <div class="rubric-info">
           <div class="rubric-name">${f.label}</div>
           <div class="rubric-desc" data-desc="${f.key}">${f.levels[active - 1]}</div>
+          ${f.note ? `<span class="rubric-factor-note">${f.note}</span>` : ''}
         </div>
-        <div class="rubric-pills">
-          <button class="rubric-pill${active === 1 ? ' active' : ''}" data-factor="${f.key}" data-value="1">1</button>
-          <button class="rubric-pill${active === 2 ? ' active' : ''}" data-factor="${f.key}" data-value="2">2</button>
-          <button class="rubric-pill${active === 3 ? ' active' : ''}" data-factor="${f.key}" data-value="3">3</button>
-        </div>
+        <div class="rubric-pills">${pills}</div>
       `;
       rubricEl.appendChild(row);
     });
@@ -1403,7 +1439,8 @@
   function updateTierUI() {
     const score = tierScore();
     const tier = tierFor(score);
-    tierScoreNumEl.textContent = score;
+    tierScoreNumEl.textContent = fmtScore(score);
+    tierScoreMaxEl.textContent = '/ ' + fmtScore(maxTierScore());
     tierBadgeNameEl.textContent = tierLabel(tier);
     tierBadgeRangeEl.textContent = tier.note
       ? `$${tier.min} to $${tier.max} per student, ${tier.note}`
