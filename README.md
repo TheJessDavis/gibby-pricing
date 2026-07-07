@@ -8,7 +8,7 @@ A pricing calculator for teachers at The Gibby. Add up your materials, plug in w
 
 - Adds up materials into a total and per-student cost
 - Suggests a ticket price from your target pay (the total for the whole class, not per student)
-- Scores your class on 5 factors (technique, prep, instruction intensity, training required, materials cost) to pick a tier and price range
+- Scores your class on 6 factors (technique, prep, instruction intensity, total class length, training required, materials cost) to pick a tier and price range. Training counts half weight, so experience alone does not raise the price.
 - Shows the split live: materials off the top, then 60/40 on what's left
 - Warns when materials eat too much of the ticket or the price falls outside the tier range
 - Shows earnings at minimum, planned, and full enrollment so you can pressure-test the numbers before you post
@@ -21,12 +21,14 @@ A pricing calculator for teachers at The Gibby. Add up your materials, plug in w
 
 ## Tiers
 
+Scores run from 5.5 to 17.5. Every factor scores 1 to 3, except total class length which goes to 4, and training which counts half.
+
 | Score | Tier | Range |
 |---|---|---|
-| 5 | Open Studio Time | $10 to $25, depending on materials provided and length |
-| 6 to 7 | Tier 1 · Intro | $25 to $45 |
-| 8 to 11 | Tier 2 · Intermediate | $45 to $65 |
-| 12 to 15 | Tier 3 · Advanced | $65 to $100+ |
+| Under 7 | Open Studio Time | $10 to $25, depending on materials provided and length |
+| 7 to 10 | Tier 1 · Intro | $25 to $45 |
+| 10.5 to 13.5 | Tier 2 · Intermediate | $45 to $65 |
+| 14 to 17.5 | Tier 3 · Advanced | $65 to $100+ |
 
 ## Hosting
 
